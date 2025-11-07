@@ -2,7 +2,7 @@ import { Header } from "@/components/header"
 import { NFTCard } from "@/components/nft-card"
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from "@mysten/dapp-kit"
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { CONTRACTPACKAGEID, CONTRACTMODULENAME, CONTRACTBURNMETHOD, CONTRACTMARKETPLACEID, CONTRACTLISTMETHOD, CONTRACTUPDATEDESCMETHOD } from "../configs/constants"
 import { Transaction } from "@mysten/sui/transactions"
 
@@ -10,19 +10,25 @@ export default function MyNFTsPage() {
   const account = useCurrentAccount()
   const suiClient = useSuiClient()
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
+  const [searchParams] = useSearchParams()
   const [nfts, setNfts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [showListInput, setShowListInput] = useState(false)
   const [priceById, setPriceById] = useState<Record<string, string>>({})
   const [openListForId, setOpenListForId] = useState<string | null>(null)
+  
+  // Get NFT type path from URL parameter (format: packageId::moduleName::NFTType)
+  const nftTypePath = searchParams.get('type')
+  const externalPackageId = searchParams.get('package')
+  const externalMarketplaceId = searchParams.get('marketplace')
+  const isExploringExternal = !!(nftTypePath || externalPackageId)
 
   useEffect(() => {
-    if (account) {
+    if (account || isExploringExternal) {
       loadNFTs()
     } else {
       setLoading(false)
     }
-  }, [account])
+  }, [account, nftTypePath, externalPackageId, externalMarketplaceId])
 
   const burnNft = async (objectId: string) => {
     if (!account) return
@@ -125,21 +131,460 @@ export default function MyNFTsPage() {
     }
   }
 
+  const loadNFTsByTypePath = async (typePath: string) => {
+    try {
+      console.log(`\n🔍 Querying listed NFTs by type path: ${typePath}`)
+      
+      // Parse the type path: packageId::moduleName::NFTType
+      const parts = typePath.split('::')
+      if (parts.length !== 3) {
+        console.error('❌ Invalid type path format. Expected: packageId::moduleName::NFTType')
+        setNfts([])
+        setLoading(false)
+        return
+      }
+      
+      const [packageId, moduleName] = parts
+      console.log(`Package: ${packageId}`)
+      console.log(`Module: ${moduleName}`)
+      
+      // Query ListNFTEvent using the parsed module name
+      const listingEvents = await suiClient.queryEvents({
+        query: {
+          MoveEventType: `${packageId}::${moduleName}::ListNFTEvent`
+        },
+        limit: 50,
+      })
+      
+      console.log(`Found ${listingEvents.data.length} listing events`)
+      
+      const externalNFTs: any[] = []
+      
+      for (const event of listingEvents.data) {
+        try {
+          const parsedJson = event.parsedJson as any
+          const listingId = parsedJson?.listing_id
+          
+          if (!listingId) continue
+          
+          // Fetch the listing object
+          const listingObj = await suiClient.getObject({
+            id: listingId,
+            options: { showContent: true, showType: true },
+          })
+          
+          if (!listingObj.data) continue
+          
+          const listingContent: any = listingObj.data.content
+          if (!listingContent || !('fields' in listingContent)) continue
+          
+          const fields = listingContent.fields as any
+          const rawNftId = fields.nft_id || fields.nft || fields.object || ''
+          
+          let nftId = ''
+          let nftData: any = null
+          
+          // Handle nested NFT object structure
+          if (typeof rawNftId === 'object' && rawNftId !== null) {
+            if (rawNftId.fields && rawNftId.fields.id && rawNftId.fields.id.id) {
+              nftId = rawNftId.fields.id.id
+              nftData = rawNftId.fields
+            } else if (rawNftId.id) {
+              nftId = rawNftId.id
+            }
+          } else {
+            nftId = String(rawNftId)
+          }
+          
+          if (!nftId) continue
+          
+          const price = fields.price ? String(fields.price) : undefined
+          const priceSUI = price ? (Number(price) / 1e9).toFixed(2) : undefined
+          
+          let name = 'NFT'
+          let description = ''
+          let image = ''
+          
+          // Use embedded NFT data if available
+          if (nftData) {
+            name = nftData.name || 'NFT'
+            description = nftData.description || ''
+            image = nftData.url || nftData.image_url || ''
+          } else {
+            // Fallback: fetch NFT object
+            try {
+              const nftObj = await suiClient.getObject({
+                id: nftId,
+                options: { showContent: true, showDisplay: true, showType: true },
+              })
+              
+              const display = nftObj.data?.display?.data
+              const content = nftObj.data?.content as any
+              name = display?.name || 'NFT'
+              description = display?.description || ''
+              image = display?.image_url || display?.image || ''
+              
+              if ((!name || !image) && content && 'fields' in content) {
+                const nf = content.fields as any
+                name = name || nf.name || 'NFT'
+                description = description || nf.description || ''
+                image = image || nf.url || nf.image_url || ''
+              }
+            } catch (e) {
+              console.warn(`Failed to fetch NFT ${nftId}:`, e)
+            }
+          }
+          
+          externalNFTs.push({
+            id: nftId,
+            name,
+            description,
+            image: image || '/placeholder.svg',
+            price: priceSUI,
+            isListed: true,
+            isExternal: true,
+          })
+          
+          console.log(`✅ Added NFT: ${name}`)
+        } catch (e) {
+          console.warn('Failed to process event:', e)
+        }
+      }
+      
+      setNfts(externalNFTs)
+      console.log(`\n✅ Loaded ${externalNFTs.length} external NFTs`)
+    } catch (error) {
+      console.error('❌ Failed to load NFTs by type path:', error)
+      setNfts([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadExternalMarketplaceNFTs = async (packageId: string, marketplaceId?: string) => {
+    try {
+      console.log(`\n📦 Querying external marketplace`)
+      console.log(`Package ID: ${packageId}`)
+      if (marketplaceId) console.log(`Marketplace ID: ${marketplaceId}`)
+      
+      const externalNFTs: any[] = []
+      
+      // If marketplace ID is provided, query its dynamic fields directly
+      if (marketplaceId) {
+        try {
+          console.log(`🔍 Querying marketplace object dynamic fields...`)
+          
+          // Get dynamic fields (listings) from the marketplace
+          let cursor = null
+          let hasNextPage = true
+          
+          while (hasNextPage) {
+            const dynamicFields = await suiClient.getDynamicFields({
+              parentId: marketplaceId,
+              cursor,
+              limit: 50,
+            })
+            
+            console.log(`Found ${dynamicFields.data.length} dynamic fields`)
+            
+            for (const field of dynamicFields.data) {
+              try {
+                const fieldObj = await suiClient.getDynamicFieldObject({
+                  parentId: marketplaceId,
+                  name: field.name,
+                })
+                
+                if (!fieldObj.data) continue
+                
+                const content: any = fieldObj.data.content
+                if (!content || !('fields' in content)) continue
+                
+                const fields = content.fields as any
+                const rawNftId = fields.nft_id || fields.nft || fields.object || ''
+                
+                let nftId = ''
+                let nftData: any = null
+                
+                // Handle nested NFT object structure
+                if (typeof rawNftId === 'object' && rawNftId !== null) {
+                  if (rawNftId.fields && rawNftId.fields.id && rawNftId.fields.id.id) {
+                    nftId = rawNftId.fields.id.id
+                    nftData = rawNftId.fields
+                  } else if (rawNftId.id) {
+                    nftId = rawNftId.id
+                  }
+                } else {
+                  nftId = String(rawNftId)
+                }
+                
+                if (!nftId) continue
+                
+                const price = fields.price ? String(fields.price) : undefined
+                const priceSUI = price ? (Number(price) / 1e9).toFixed(2) : undefined
+                
+                let name = 'NFT'
+                let description = ''
+                let image = ''
+                
+                // Use embedded NFT data if available
+                if (nftData) {
+                  name = nftData.name || 'NFT'
+                  description = nftData.description || ''
+                  image = nftData.url || nftData.image_url || ''
+                }
+                
+                // Fetch NFT object if we don't have full data
+                if (!image) {
+                  try {
+                    const nftObj = await suiClient.getObject({
+                      id: nftId,
+                      options: { showContent: true, showDisplay: true },
+                    })
+                    
+                    const display = nftObj.data?.display?.data
+                    const nftContent = nftObj.data?.content as any
+                    name = display?.name || name
+                    description = display?.description || description
+                    image = display?.image_url || display?.image || ''
+                    
+                    if (!image && nftContent && 'fields' in nftContent) {
+                      const nf = nftContent.fields as any
+                      image = nf.url || nf.image_url || ''
+                    }
+                  } catch (e) {
+                    console.warn(`Failed to fetch NFT ${nftId}:`, e)
+                  }
+                }
+                
+                externalNFTs.push({
+                  id: nftId,
+                  name,
+                  description,
+                  image: image || '/placeholder.svg',
+                  price: priceSUI,
+                  isListed: true,
+                  isExternal: true,
+                })
+                
+                console.log(`✅ Added NFT: ${name}`)
+              } catch (e) {
+                console.warn("Failed to process dynamic field:", e)
+              }
+            }
+            
+            cursor = dynamicFields.nextCursor
+            hasNextPage = dynamicFields.hasNextPage
+          }
+          
+          setNfts(externalNFTs)
+          console.log(`\n✅ Loaded ${externalNFTs.length} NFTs from marketplace object`)
+          setLoading(false)
+          return
+        } catch (e) {
+          console.error("Failed to query marketplace object, falling back to events:", e)
+        }
+      }
+      
+      // Fallback: Query events
+      console.log(`🔍 Querying events for package: ${packageId}`)
+      
+      let listingEvents: any = null
+      
+      try {
+        // Query all events from this package
+        const allEvents = await suiClient.queryEvents({
+          query: { Transaction: packageId },
+          limit: 50,
+        })
+        
+        console.log(`Found ${allEvents.data.length} total events from package`)
+        
+        // Look for ListNFTEvent or similar listing events
+        const listingEventData = allEvents.data.filter((event: any) => {
+          const eventType = event.type
+          return eventType.includes('ListNFT') || 
+                 eventType.includes('List') || 
+                 eventType.includes('list')
+        })
+        
+        if (listingEventData.length > 0) {
+          console.log(`✅ Found ${listingEventData.length} listing events`)
+          listingEvents = { data: listingEventData }
+        }
+      } catch (e) {
+        console.log("Could not query by transaction, trying module names...")
+      }
+      
+      // If the above didn't work, try specific module names
+      if (!listingEvents || listingEvents.data.length === 0) {
+        const possibleModuleNames = ['nft_marketplace', 'marketplace', 'nft', 'main']
+        
+        for (const moduleName of possibleModuleNames) {
+          try {
+            console.log(`🔍 Trying module: ${moduleName}`)
+            const events = await suiClient.queryEvents({
+              query: {
+                MoveEventType: `${packageId}::${moduleName}::ListNFTEvent`
+              },
+              limit: 50,
+            })
+            
+            if (events.data.length > 0) {
+              listingEvents = events
+              console.log(`✅ Found ${events.data.length} events with module: ${moduleName}`)
+              break
+            }
+          } catch (e) {
+            continue
+          }
+        }
+      }
+      
+      if (!listingEvents || listingEvents.data.length === 0) {
+        console.log(`⚠️ No listing events found for package ${packageId}`)
+        setNfts([])
+        setLoading(false)
+        return
+      }
+      
+      console.log(`Processing ${listingEvents.data.length} listing events`)
+      
+      // Process events and add to externalNFTs array
+      
+      for (const event of listingEvents.data) {
+        try {
+          const parsedJson = event.parsedJson as any
+          const listingId = parsedJson?.listing_id
+          
+          if (!listingId) continue
+          
+          // Fetch the listing object
+          const listingObj = await suiClient.getObject({
+            id: listingId,
+            options: { showContent: true, showType: true },
+          })
+          
+          if (!listingObj.data) continue
+          
+          const listingContent: any = listingObj.data.content
+          if (!listingContent || !('fields' in listingContent)) continue
+          
+          const fields = listingContent.fields as any
+          const rawNftId = fields.nft_id || fields.nft || fields.object || ''
+          
+          let nftId = ''
+          let nftData: any = null
+          
+          // Handle nested NFT object structure
+          if (typeof rawNftId === 'object' && rawNftId !== null) {
+            if (rawNftId.fields && rawNftId.fields.id && rawNftId.fields.id.id) {
+              nftId = rawNftId.fields.id.id
+              nftData = rawNftId.fields
+            } else if (rawNftId.id) {
+              nftId = rawNftId.id
+            }
+          } else {
+            nftId = String(rawNftId)
+          }
+          
+          if (!nftId) continue
+          
+          const price = fields.price ? String(fields.price) : undefined
+          const priceSUI = price ? (Number(price) / 1e9).toFixed(2) : undefined
+          
+          let name = 'NFT'
+          let description = ''
+          let image = ''
+          
+          // Use embedded NFT data if available
+          if (nftData) {
+            name = nftData.name || 'NFT'
+            description = nftData.description || ''
+            image = nftData.url || nftData.image_url || ''
+          } else {
+            // Fallback: fetch NFT object
+            try {
+              const nftObj = await suiClient.getObject({
+                id: nftId,
+                options: { showContent: true, showDisplay: true, showType: true },
+              })
+              
+              const display = nftObj.data?.display?.data
+              const content = nftObj.data?.content as any
+              name = display?.name || 'NFT'
+              description = display?.description || ''
+              image = display?.image_url || display?.image || ''
+              
+              if ((!name || !image) && content && 'fields' in content) {
+                const nf = content.fields as any
+                name = name || nf.name || 'NFT'
+                description = description || nf.description || ''
+                image = image || nf.url || nf.image_url || ''
+              }
+            } catch (e) {
+              console.warn(`Failed to fetch NFT ${nftId}:`, e)
+            }
+          }
+          
+          externalNFTs.push({
+            id: nftId,
+            name,
+            description,
+            image: image || '/placeholder.svg',
+            price: priceSUI,
+            isListed: true,
+            isExternal: true,
+          })
+          
+          console.log(`✅ Added external NFT: ${name}`)
+        } catch (e) {
+          console.warn("Failed to process event:", e)
+        }
+      }
+      
+      setNfts(externalNFTs)
+      console.log(`\n✅ Loaded ${externalNFTs.length} external NFTs`)
+    } catch (error) {
+      console.error("❌ Failed to load external marketplace NFTs:", error)
+      setNfts([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const loadNFTs = async () => {
-    if (!account?.address) return
+    // For external package exploration, we don't need account
+    if (!isExploringExternal && !account?.address) return
 
     try {
       setLoading(true)
       
+      // If type path is provided, use it to query listings
+      if (nftTypePath) {
+        console.log("=== 🌐 EXPLORING BY TYPE PATH ===")
+        console.log("Type Path:", nftTypePath)
+        await loadNFTsByTypePath(nftTypePath)
+        return
+      }
+      
+      // If exploring external marketplace, show listed NFTs from that package
+      if (isExploringExternal && externalPackageId) {
+        console.log("=== 🌐 EXPLORING EXTERNAL MARKETPLACE ===")
+        console.log("Package ID:", externalPackageId)
+        await loadExternalMarketplaceNFTs(externalPackageId, externalMarketplaceId || undefined)
+        return
+      }
+      
+      // Otherwise, load user's own NFTs
       console.log("=== 🔍 STARTING NFT FETCH ===")
-      console.log("Wallet Address:", account.address)
+      console.log("Wallet Address:", account?.address)
       console.log("Package ID:", CONTRACTPACKAGEID)
       console.log("Module Name:", CONTRACTMODULENAME)
       
       // Step 1: Fetch ALL owned objects first
       console.log("\n=== Step 1: Fetching ALL owned objects ===")
       const allOwnedObjects = await suiClient.getOwnedObjects({
-        owner: account.address,
+        owner: account!.address,
         options: {
           showContent: true,
           showType: true,
@@ -366,7 +811,7 @@ const matchingObjects = allOwnedObjects.data.filter(obj => {
     }
   }
 
-  if (!account) {
+  if (!account && !isExploringExternal) {
     return (
       <main className="min-h-screen bg-background">
         <Header />
@@ -385,21 +830,43 @@ const matchingObjects = allOwnedObjects.data.filter(obj => {
       <Header />
 
       <div className="container mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-12">
-          <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              My NFTs
+        {isExploringExternal ? (
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-4">
+              <Link to="/" className="text-muted-foreground hover:text-foreground">
+                ← Back to Home
+              </Link>
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+              External Marketplace
             </h1>
-            <p className="text-muted-foreground">Your digital collectible collection</p>
+            {nftTypePath ? (
+              <p className="text-muted-foreground">
+                NFT Type: <span className="font-mono text-sm break-all">{nftTypePath}</span>
+              </p>
+            ) : externalPackageId ? (
+              <p className="text-muted-foreground">
+                Package ID: <span className="font-mono text-sm">{externalPackageId}</span>
+              </p>
+            ) : null}
           </div>
-          <button
-            onClick={loadNFTs}
-            disabled={loading}
-            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg disabled:opacity-50 transition-opacity text-sm font-medium"
-          >
-            {loading ? "Loading..." : "Refresh"}
-          </button>
-        </div>
+        ) : (
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                My NFTs
+              </h1>
+              <p className="text-muted-foreground">Your digital collectible collection</p>
+            </div>
+            <button
+              onClick={loadNFTs}
+              disabled={loading}
+              className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg disabled:opacity-50 transition-opacity text-sm font-medium"
+            >
+              {loading ? "Loading..." : "Refresh"}
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center min-h-[60vh]">
@@ -408,13 +875,19 @@ const matchingObjects = allOwnedObjects.data.filter(obj => {
         ) : nfts.length === 0 ? (
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
-              <p className="text-muted-foreground mb-6">You don't have any NFTs yet</p>
-              <Link
-                to="/mint"
-                className="inline-flex items-center justify-center rounded-lg bg-primary hover:bg-primary/90 px-8 py-3 text-primary-foreground font-medium transition-colors"
-              >
-                Create Your First NFT
-              </Link>
+              {isExploringExternal ? (
+                <p className="text-muted-foreground mb-6">No NFTs listed in this marketplace</p>
+              ) : (
+                <>
+                  <p className="text-muted-foreground mb-6">You don't have any NFTs yet</p>
+                  <Link
+                    to="/mint"
+                    className="inline-flex items-center justify-center rounded-lg bg-primary hover:bg-primary/90 px-8 py-3 text-primary-foreground font-medium transition-colors"
+                  >
+                    Create Your First NFT
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         ) : (
@@ -423,14 +896,26 @@ const matchingObjects = allOwnedObjects.data.filter(obj => {
               <div key={nft.id} className="space-y-3">
                 <NFTCard
                   {...nft}
-                  onList={nft.isFromThisPackage ? () => setOpenListForId((prev) => (prev === nft.id ? null : nft.id)) : undefined}
+                  onList={nft.isFromThisPackage && !nft.isExternal ? () => setOpenListForId((prev) => (prev === nft.id ? null : nft.id)) : undefined}
                   listButtonText={openListForId === nft.id ? "Cancel" : "List for Sale"}
-                  onUpdateDescription={nft.isFromThisPackage ? (newDesc) => updateNFTDescription(nft.id, newDesc) : undefined}
-                  canEdit={nft.isFromThisPackage}
+                  onUpdateDescription={nft.isFromThisPackage && !nft.isExternal ? (newDesc) => updateNFTDescription(nft.id, newDesc) : undefined}
+                  canEdit={nft.isFromThisPackage && !nft.isExternal}
                 />
                 
-                {/* Show warning for NFTs from other packages */}
-                {!nft.isFromThisPackage && (
+                {/* Show info for external marketplace NFTs */}
+                {nft.isExternal && (
+                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                      🌐 External Marketplace NFT
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This NFT is from another marketplace - View only
+                    </p>
+                  </div>
+                )}
+                
+                {/* Show warning for NFTs from other packages (but same marketplace) */}
+                {!nft.isFromThisPackage && !nft.isExternal && (
                   <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
                     <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
                       ⚠️ From external collection - View only
@@ -441,7 +926,7 @@ const matchingObjects = allOwnedObjects.data.filter(obj => {
                   </div>
                 )}
                 
-                {openListForId === nft.id && nft.isFromThisPackage && (
+                {openListForId === nft.id && nft.isFromThisPackage && !nft.isExternal && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <input
@@ -469,8 +954,8 @@ const matchingObjects = allOwnedObjects.data.filter(obj => {
                   </div>
                 )}
                 
-                {/* Only show burn button for NFTs from this package */}
-                {nft.isFromThisPackage && (
+                {/* Only show burn button for NFTs from this package and not external */}
+                {nft.isFromThisPackage && !nft.isExternal && (
                   <button
                     onClick={() => burnNft(nft.id)}
                     disabled={isPending}

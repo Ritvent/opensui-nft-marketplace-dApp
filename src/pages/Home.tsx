@@ -1,8 +1,9 @@
 import { Header } from "@/components/header"
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { ArrowRight, ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { CONTRACTPACKAGEID, CONTRACTMODULENAME } from "@/configs/constants"
 
@@ -20,9 +21,11 @@ type ListingItem = {
 export default function Home() {
   const account = useCurrentAccount()
   const suiClient = useSuiClient()
+  const navigate = useNavigate()
   const [listings, setListings] = useState<ListingItem[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [packageSearch, setPackageSearch] = useState("")
 
   // Load listings from blockchain
   useEffect(() => {
@@ -39,6 +42,13 @@ export default function Home() {
 
     return () => clearInterval(interval)
   }, [listings.length, currentSlide])
+
+  const handleMarketplaceSearch = () => {
+    if (packageSearch.trim()) {
+      // Navigate to MyNFTs with the full type path as a query parameter
+      navigate(`/my-nfts?type=${encodeURIComponent(packageSearch.trim())}`)
+    }
+  }
 
   const loadListings = async () => {
     setLoading(true)
@@ -304,6 +314,43 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Marketplace Explorer Section */}
+        <section className="mb-20">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Explore Other Marketplaces
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              Enter the NFT type path to discover NFTs from other marketplaces on the Sui network
+            </p>
+            <div className="flex gap-3">
+              <Input
+                type="text"
+                placeholder="Enter NFT type (0x...::module::NFTType)"
+                value={packageSearch}
+                onChange={(e) => setPackageSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleMarketplaceSearch()
+                  }
+                }}
+                className="flex-1 h-12 text-base bg-card border-border"
+              />
+              <Button
+                onClick={handleMarketplaceSearch}
+                disabled={!packageSearch.trim()}
+                className="h-12 px-8 bg-primary hover:bg-primary/90"
+              >
+                <Search className="w-5 h-5 mr-2" />
+                Explore
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Example: {CONTRACTPACKAGEID}::nft_marketplace::TestChainNFT
+            </p>
           </div>
         </section>
 
