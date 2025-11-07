@@ -1,9 +1,17 @@
-import { createNetworkConfig, SuiClientProvider, WalletProvider, ConnectButton } from '@mysten/dapp-kit';
+import { createNetworkConfig, SuiClientProvider, lightTheme, WalletProvider } from '@mysten/dapp-kit';
 import { getFullnodeUrl } from '@mysten/sui/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Minter from './components/Mint';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { getQueryClient } from './lib/query-client';
+import { Footer } from './components/footer';
+import { ToastProvider } from './components/ui/toast-provider';
+import { Toaster } from './components/ui/toaster';
+import Home from './pages/Home';
+import Mint from './pages/Mint';
+import Explore from './pages/Explore';
+import MyNFTs from './pages/MyNFTs';
+import Admin from './pages/Admin';
 import './App.css';
-import { StrictMode } from 'react';
 
 // Config options for the networks you want to connect to
 const { networkConfig } = createNetworkConfig({
@@ -12,24 +20,31 @@ const { networkConfig } = createNetworkConfig({
   mainnet: { url: getFullnodeUrl('mainnet') },
 });
 
-const queryClient = new QueryClient();
+const queryClient = getQueryClient();
 
 function App() {
   return (
-    <StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <SuiClientProvider networks={networkConfig} defaultNetwork='testnet'>
-                <WalletProvider>
-                  <header className='app-header'>
-                    <ConnectButton />
-                  </header>
-                  <main className='app-main'>
-                    <Minter />
-                  </main>
-                </WalletProvider>
-            </SuiClientProvider>
-        </QueryClientProvider>
-      </StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networkConfig} defaultNetwork='testnet'>
+        <WalletProvider theme={lightTheme}>
+          <ToastProvider>
+            <BrowserRouter>
+              <div className="flex flex-col min-h-screen relative">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/mint" element={<Mint />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route path="/my-nfts" element={<MyNFTs />} />
+                  <Route path="/admin" element={<Admin />} />
+                </Routes>
+                <Footer />
+              </div>
+            </BrowserRouter>
+            <Toaster />
+          </ToastProvider>
+        </WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
   );
 }
 
