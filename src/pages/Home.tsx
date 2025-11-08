@@ -26,6 +26,7 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [loading, setLoading] = useState(true)
   const [packageSearch, setPackageSearch] = useState("")
+  const [copied, setCopied] = useState(false);
 
   // Load listings from blockchain
   useEffect(() => {
@@ -316,7 +317,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-
+        
         {/* Marketplace Explorer Section */}
         <section className="mb-20">
           <div className="max-w-3xl mx-auto text-center">
@@ -324,12 +325,12 @@ export default function Home() {
               Explore Other Marketplaces
             </h2>
             <p className="text-muted-foreground mb-8">
-              Enter the NFT type path to discover NFTs from other marketplaces on the Sui network
+              Enter the NFT type path to discover Listed NFTs from other marketplaces on the Sui test network
             </p>
             <div className="flex gap-3">
               <Input
                 type="text"
-                placeholder="Enter NFT type (0x...::module::NFTType)"
+                placeholder="Enter NFT type path"
                 value={packageSearch}
                 onChange={(e) => setPackageSearch(e.target.value)}
                 onKeyDown={(e) => {
@@ -348,12 +349,37 @@ export default function Home() {
                 Explore
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              Example: {CONTRACTPACKAGEID}::nft_marketplace::TestChainNFT
-            </p>
+            <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <span className="shrink-0">Example:</span>
+              <code 
+                className="bg-muted px-3 py-1 rounded text-[10px] cursor-pointer hover:bg-muted/80 transition-colors break-all" 
+                onClick={() => {
+                  const exampleText = '0x038bf323b5b788f74879e0ea072e23f2817953770f6c6c3aba85870985171a9a::dian_nft_marketplace::DianChainNFT';
+                  navigator.clipboard.writeText(exampleText);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                title="Click to copy"
+              >
+                {'0x038bf323b5b788f74879e0ea072e23f2817953770f6c6c3aba85870985171a9a::dian_nft_marketplace::DianChainNFT'}
+              </code>
+              <button 
+                onClick={() => {
+                  const exampleText = '0x038bf323b5b788f74879e0ea072e23f2817953770f6c6c3aba85870985171a9a::dian_nft_marketplace::DianChainNFT';
+                  navigator.clipboard.writeText(exampleText);
+                  setPackageSearch(exampleText);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="text-primary hover:text-primary/80 underline shrink-0"
+              >
+              </button>
+              {copied && (
+                <span className="text-purple-500 font-medium">Copied!</span>
+              )}
+            </div>
           </div>
         </section>
-
         {
         /* Stats Section  
         <section className="mb-20">
