@@ -15,7 +15,7 @@ export function Footer() {
                 <span className="text-lg font-bold text-primary-foreground">◆</span>
               </div>
               <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Open SUI
+                OpenSUI
               </span>
             </div>
             <p className="text-sm text-muted-foreground">The premier NFT marketplace on Sui network</p>
@@ -69,10 +69,7 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-foreground mb-4">Connect</h3>
             <div className="flex gap-3">
-              <a href="#" className="p-2 rounded-lg hover:bg-primary/10 transition-colors">
-                <Twitter className="w-5 h-5 text-muted-foreground hover:text-primary" />
-              </a>
-              <a href="#" className="p-2 rounded-lg hover:bg-primary/10 transition-colors">
+              <a href="https://www.github.com/Ritvent" className="p-2 rounded-lg hover:bg-primary/10 transition-colors">
                 <Github className="w-5 h-5 text-muted-foreground hover:text-primary" />
               </a>
               <a href="#" className="p-2 rounded-lg hover:bg-primary/10 transition-colors">
@@ -84,7 +81,7 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">© {currentYear} Open SUI. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">© {currentYear} OpenSUI. All rights reserved.</p>
           <div className="flex gap-6 text-sm">
             <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
               Privacy Policy
