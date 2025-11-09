@@ -136,18 +136,48 @@ export default function MyNFTsPage() {
       console.log("Package ID:", CONTRACTPACKAGEID)
       console.log("Module Name:", CONTRACTMODULENAME)
       
-      // Step 1: Fetch ALL owned objects first
-      console.log("\n=== Step 1: Fetching ALL owned objects ===")
-      const allOwnedObjects = await suiClient.getOwnedObjects({
-        owner: account.address,
-        options: {
-          showContent: true,
-          showType: true,
-          showDisplay: true,
-        },
-      })
+      // Step 1: Fetch ALL owned objects with scalable pagination
+      console.log("\n=== Step 1: Fetching owned objects (paginated) ===")
       
-      console.log(`Total objects owned: ${allOwnedObjects.data.length}`)
+      let allObjects: any[] = []
+      let cursor: string | null = null
+      let hasNextPage = true
+      let pageCount = 0
+      const MAX_PAGES = 20 // Safety limit: ~1000 objects max (50 per page)
+      
+      // Paginate through owned objects with early exit
+      while (hasNextPage && pageCount < MAX_PAGES) {
+        try {
+          const response = await suiClient.getOwnedObjects({
+            owner: account.address,
+            cursor: cursor,
+            limit: 50, // Explicit limit for clarity
+            options: {
+              showContent: true,
+              showType: true,
+              showDisplay: true,
+            },
+          })
+          
+          allObjects = [...allObjects, ...response.data]
+          hasNextPage = response.hasNextPage
+          cursor = response.nextCursor ?? null
+          pageCount++
+          
+          console.log(`📄 Page ${pageCount}: Fetched ${response.data.length} objects, total so far: ${allObjects.length}`)
+          
+        } catch (pageError) {
+          console.warn(`⚠️ Failed to fetch page ${pageCount + 1}, continuing with ${allObjects.length} objects`, pageError)
+          break // Stop pagination on error but continue with what we have
+        }
+      }
+      
+      if (pageCount >= MAX_PAGES) {
+        console.warn(`⚠️ Reached maximum page limit (${MAX_PAGES} pages). Some objects may not be shown.`)
+      }
+      
+      const allOwnedObjects = { data: allObjects }
+      console.log(`✅ Total objects fetched: ${allOwnedObjects.data.length} (across ${pageCount} pages)`)
       
       if (allOwnedObjects.data.length === 0) {
         console.log("⚠️ No objects found for this address")

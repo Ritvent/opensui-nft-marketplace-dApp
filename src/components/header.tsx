@@ -51,22 +51,38 @@ export function Header() {
               <span className="text-xl font-bold text-primary-foreground">◆</span>
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Open SUI
+              OpenSUI
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link to="/explore" className={`${location.pathname === '/explore' ? 'text-foreground' : 'text-foreground/70'} hover:text-foreground transition-colors`}>
+            <Link 
+              to="/explore" 
+              className={`transition-colors ${location.pathname === '/explore' ? 'font-semibold' : ''}`}
+              style={{ color: location.pathname === '/explore' ? 'var(--primary)' : 'color-mix(in oklch, var(--primary) 70%, transparent)' }}
+            >
               Explore
             </Link>
-            <Link to="/mint" className={`${location.pathname === '/mint' ? 'text-foreground' : 'text-foreground/70'} hover:text-foreground transition-colors`}>
+            <Link 
+              to="/mint" 
+              className={`transition-colors ${location.pathname === '/mint' ? 'font-semibold' : ''}`}
+              style={{ color: location.pathname === '/mint' ? 'var(--primary)' : 'color-mix(in oklch, var(--primary) 70%, transparent)' }}
+            >
               Mint
             </Link>
-            <Link to="/my-nfts" className={`${location.pathname === '/my-nfts' ? 'text-foreground' : 'text-foreground/70'} hover:text-foreground transition-colors`}>
+            <Link 
+              to="/my-nfts" 
+              className={`transition-colors ${location.pathname === '/my-nfts' ? 'font-semibold' : ''}`}
+              style={{ color: location.pathname === '/my-nfts' ? 'var(--primary)' : 'color-mix(in oklch, var(--primary) 70%, transparent)' }}
+            >
               My NFTs
             </Link>
-            <Link to="/admin" className={`${location.pathname === '/admin' ? 'text-foreground' : 'text-foreground/70'} hover:text-foreground transition-colors`}>
+            <Link 
+              to="/admin" 
+              className={`transition-colors ${location.pathname === '/admin' ? 'font-semibold' : ''}`}
+              style={{ color: location.pathname === '/admin' ? 'var(--primary)' : 'color-mix(in oklch, var(--primary) 70%, transparent)' }}
+            >
               Admin
             </Link>
           </nav>
@@ -97,16 +113,16 @@ export function Header() {
         {/* Mobile Navigation */}
         {mobileOpen && (
           <nav className="md:hidden mt-4 flex flex-col gap-4 pb-4 border-t border-border pt-4">
-            <Link to="/explore" className="text-foreground/70 hover:text-foreground transition-colors" onClick={() => setMobileOpen(false)}>
+            <Link to="/explore" className={`${location.pathname === '/explore' ? 'text-primary font-semibold' : 'text-primary/70'} hover:text-primary transition-colors`} onClick={() => setMobileOpen(false)}>
               Explore
             </Link>
-            <Link to="/mint" className="text-foreground/70 hover:text-foreground transition-colors" onClick={() => setMobileOpen(false)}>
+            <Link to="/mint" className={`${location.pathname === '/mint' ? 'text-primary font-semibold' : 'text-primary/70'} hover:text-primary transition-colors`} onClick={() => setMobileOpen(false)}>
               Mint
             </Link>
-            <Link to="/my-nfts" className="text-foreground/70 hover:text-foreground transition-colors" onClick={() => setMobileOpen(false)}>
+            <Link to="/my-nfts" className={`${location.pathname === '/my-nfts' ? 'text-primary font-semibold' : 'text-primary/70'} hover:text-primary transition-colors`} onClick={() => setMobileOpen(false)}>
               My NFTs
             </Link>
-            <Link to="/admin" className="text-foreground/70 hover:text-foreground transition-colors" onClick={() => setMobileOpen(false)}>
+            <Link to="/admin" className={`${location.pathname === '/admin' ? 'text-primary font-semibold' : 'text-primary/70'} hover:text-primary transition-colors`} onClick={() => setMobileOpen(false)}>
               Admin
             </Link>
             <div className="pt-2 flex flex-col gap-3">
@@ -126,4 +142,3 @@ export function Header() {
     </header>
   )
 }
-

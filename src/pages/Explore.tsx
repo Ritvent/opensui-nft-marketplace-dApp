@@ -31,7 +31,7 @@ export default function ExplorePage() {
   const [error, setError] = useState<string | null>(null)
   const [listings, setListings] = useState<ListingItem[]>([])
   const [selectedListing, setSelectedListing] = useState<ListingItem | null>(null)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+ const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [sortBy, setSortBy] = useState<'price-low' | 'price-high' | 'name'>('price-low')
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [showFilters, setShowFilters] = useState(true)
@@ -538,7 +538,7 @@ export default function ExplorePage() {
       <Header />
       
       {/* Header bar */}
-      <div className="bg-card border-b border-border">
+      
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">OpenSUI Marketplace</h1>
@@ -560,7 +560,6 @@ export default function ExplorePage() {
               >
                 {loading ? 'Loading...' : 'Refresh'}
               </Button>
-            </div>
           </div>
         </div>
       </div>
@@ -788,8 +787,8 @@ export default function ExplorePage() {
 
                 {/* Right Panel - Selected Item Details */}
                 {selectedListing && (
-                  <div className="w-80 flex-shrink-0">
-                    <Card className="bg-card border-border sticky top-4">
+                  <div className="w-64 flex-shrink-0">
+                    <Card className="bg-card border-border sticky top-19.5">
                       <div className="p-4">
                         <div className="aspect-square bg-muted rounded mb-4 overflow-hidden">
                           <img 
