@@ -466,7 +466,7 @@ const matchingObjects = allOwnedObjects.data.filter(obj => {
                       ⚠️ From external collection - View only
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Cannot list, burn, or edit NFTs from other packages
+                      Cannot modify or edit NFTs from other packages
                     </p>
                   </div>
                 )}

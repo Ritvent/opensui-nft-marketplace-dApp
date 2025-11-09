@@ -34,7 +34,7 @@ export default function ExplorePage() {
  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [sortBy, setSortBy] = useState<'price-low' | 'price-high' | 'name'>('price-low')
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
-  const [showFilters, setShowFilters] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
   const [userBalance, setUserBalance] = useState<string>('0')
   const [showInsufficientBalanceWarning, setShowInsufficientBalanceWarning] = useState(false)
 
@@ -547,7 +547,7 @@ export default function ExplorePage() {
                 variant="ghost" 
                 size="sm"
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                className="text-primary hover:text-accent"
+                className="text-primary"
               >
                 {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid3x3 className="w-4 h-4" />}
               </Button>
@@ -556,7 +556,7 @@ export default function ExplorePage() {
                 size="sm"
                 onClick={loadListings} 
                 disabled={loading}
-                className="text-primary hover:text-accent"
+                className="text-primary"
               >
                 {loading ? 'Loading...' : 'Refresh'}
               </Button>
@@ -788,7 +788,7 @@ export default function ExplorePage() {
                 {/* Right Panel - Selected Item Details */}
                 {selectedListing && (
                   <div className="w-64 flex-shrink-0">
-                    <Card className="bg-card border-border sticky top-19.5">
+                    <Card className="bg-card border-border sticky top-20">
                       <div className="p-4">
                         <div className="aspect-square bg-muted rounded mb-4 overflow-hidden">
                           <img 

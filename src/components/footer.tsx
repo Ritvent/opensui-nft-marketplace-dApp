@@ -69,10 +69,7 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-foreground mb-4">Connect</h3>
             <div className="flex gap-3">
-              <a href="#" className="p-2 rounded-lg hover:bg-primary/10 transition-colors">
-                <Twitter className="w-5 h-5 text-muted-foreground hover:text-primary" />
-              </a>
-              <a href="#" className="p-2 rounded-lg hover:bg-primary/10 transition-colors">
+              <a href="https://www.github.com/Ritvent" className="p-2 rounded-lg hover:bg-primary/10 transition-colors">
                 <Github className="w-5 h-5 text-muted-foreground hover:text-primary" />
               </a>
               <a href="#" className="p-2 rounded-lg hover:bg-primary/10 transition-colors">
