@@ -413,18 +413,18 @@ const matchingObjects = allOwnedObjects.data.filter(obj => {
     <main className="min-h-screen bg-background">
       <Header />
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-12">
+      <div className="container mx-auto px-4 py-6 sm:py-8 lg:py-12">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-8 sm:mb-12">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               My NFTs
             </h1>
-            <p className="text-muted-foreground">Your digital collectible collection</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Your digital collectible collection</p>
           </div>
           <button
             onClick={loadNFTs}
             disabled={loading}
-            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg disabled:opacity-50 transition-opacity text-sm font-medium"
+            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg disabled:opacity-50 transition-opacity text-sm font-medium w-full sm:w-auto"
           >
             {loading ? "Loading..." : "Refresh"}
           </button>
@@ -447,9 +447,9 @@ const matchingObjects = allOwnedObjects.data.filter(obj => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {nfts.map((nft) => (
-              <div key={nft.id} className="space-y-3">
+              <div key={nft.id} className="space-y-2 sm:space-y-3">
                 <NFTCard
                   {...nft}
                   onList={nft.isFromThisPackage ? () => setOpenListForId((prev) => (prev === nft.id ? null : nft.id)) : undefined}

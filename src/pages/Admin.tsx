@@ -491,56 +491,56 @@ export default function AdminPage() {
     <main className="min-h-screen bg-background">
       <Header />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Admin Dashboard
           </h1>
-          <p className="text-muted-foreground">Real-time marketplace analytics and management</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Real-time marketplace analytics and management</p>
         </div>
 
         {/* Stats Grid - 4 columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {/* Total Sales */}
-          <Card className="p-6 bg-card border-border hover:shadow-lg transition-shadow">
+          <Card className="p-4 sm:p-6 bg-card border-border hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Total Sales</p>
-                <p className="text-3xl font-bold text-foreground mb-2">{stats.totalSales}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Sales</p>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{stats.totalSales}</p>
                 <p className="text-xs text-muted-foreground">Transactions</p>
               </div>
             </div>
           </Card>
 
           {/* Active Listings */}
-          <Card className="p-6 bg-card border-border hover:shadow-lg transition-shadow">
+          <Card className="p-4 sm:p-6 bg-card border-border hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Active Listings</p>
-                <p className="text-3xl font-bold text-foreground mb-2">{stats.totalListings}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Active Listings</p>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{stats.totalListings}</p>
                 <p className="text-xs text-muted-foreground">of {stats.allTimeListings} total</p>
               </div>
             </div>
           </Card>
 
           {/* Accumulated Fees */}
-          <Card className="p-6 bg-card border-border hover:shadow-lg transition-shadow">
+          <Card className="p-4 sm:p-6 bg-card border-border hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Accumulated Fees</p>
-                <p className="text-primary text-3xl font-bold mb-2">{stats.totalFees}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Accumulated Fees</p>
+                <p className="text-primary text-2xl sm:text-3xl font-bold mb-2">{stats.totalFees}</p>
                 <p className="text-xs text-muted-foreground">SUI ({stats.feePercent}% fee)</p>
               </div>
             </div>
           </Card>
 
           {/* Active Users */}
-          <Card className="p-6 bg-card border-border hover:shadow-lg transition-shadow">
+          <Card className="p-4 sm:p-6 bg-card border-border hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Unique Users</p>
-                <p className="text-3xl font-bold text-foreground mb-2">{stats.activeUsers}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Unique Users</p>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{stats.activeUsers}</p>
                 <p className="text-xs text-muted-foreground">Connected traders</p>
               </div>
             </div>
@@ -548,12 +548,12 @@ export default function AdminPage() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Column - Fee Management + Quick Stats */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-4 sm:space-y-6">
             {/* Fee Management */}
-            <Card className="p-6 bg-card border-border">
-              <h3 className="text-lg font-bold mb-4">Fee Management</h3>
+            <Card className="p-4 sm:p-6 bg-card border-border">
+              <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Fee Management</h3>
               
               <div className="space-y-4">
                 <div className="p-4 rounded-lg bg-accent/1 border">
@@ -632,21 +632,21 @@ export default function AdminPage() {
             </Card>
 
             {/* Quick Stats */}
-            <Card className="p-6 bg-card border-border">
-              <h3 className="text-lg font-bold mb-4">Quick Stats</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
-                  <span className="text-sm text-muted-foreground">Avg Sale Price</span>
-                  <span className="text-primary font-bold">{stats.avgPrice} SUI</span>
+            <Card className="p-4 sm:p-6 bg-card border-border">
+              <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Quick Stats</h3>
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-muted/50">
+                  <span className="text-xs sm:text-sm text-muted-foreground">Avg Sale Price</span>
+                  <span className="text-primary font-bold text-sm sm:text-base">{stats.avgPrice} SUI</span>
                   
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
-                  <span className="text-sm text-muted-foreground">Fee Rate</span>
-                  <span className="font-bold">{stats.feePercent}%</span>
+                <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-muted/50">
+                  <span className="text-xs sm:text-sm text-muted-foreground">Fee Rate</span>
+                  <span className="font-bold text-sm sm:text-base">{stats.feePercent}%</span>
                 </div>
-                <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
-                  <span className="text-sm text-muted-foreground">Today's Sales</span>
-                  <span className="font-bold text-green-500 flex items-center gap-1"> 
+                <div className="flex justify-between items-center p-2 sm:p-3 rounded-lg bg-muted/50">
+                  <span className="text-xs sm:text-sm text-muted-foreground">Today's Sales</span>
+                  <span className="font-bold text-sm sm:text-base text-green-500 flex items-center gap-1"> 
                     {stats.todaySales}
                   </span>
                 </div>
@@ -654,8 +654,8 @@ export default function AdminPage() {
             </Card>
 
             {/* System Status */}
-            <Card className="p-6 bg-card border-border">
-              <h3 className="text-lg font-bold mb-4">System Status</h3>
+            <Card className="p-4 sm:p-6 bg-card border-border">
+              <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">System Status</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -671,26 +671,26 @@ export default function AdminPage() {
 
           {/* Right Column - Activity Feed */}
           <div className="lg:col-span-2">
-            <Card className="p-6 bg-card border-border h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">Recent Activity</h3>
+            <Card className="p-4 sm:p-6 bg-card border-border h-full">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-4">
+                <h3 className="text-base sm:text-lg font-bold">Recent Activity</h3>
                 <Button 
                   onClick={loadStats} 
                   variant="ghost" 
                   size="sm"
-                  className="text-xs"
+                  className="text-xs w-full sm:w-auto"
                 >
                   Refresh
                 </Button>
               </div>
 
               {/* Activity Filter Tabs */}
-              <div className="flex gap-2 mb-4 border-b border-border">
+              <div className="flex gap-1 sm:gap-2 mb-4 border-b border-border overflow-x-auto">
                 {(['all', 'sales', 'listings', 'delists'] as const).map((filter) => (
                   <button
                     key={filter}
                     onClick={() => setActivityFilter(filter)}
-                    className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
+                    className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium capitalize transition-colors whitespace-nowrap flex-shrink-0 ${
                       activityFilter === filter
                         ? 'text-primary border-b-2 border-primary'
                         : 'text-muted-foreground hover:text-foreground'
@@ -709,13 +709,13 @@ export default function AdminPage() {
               </div>
 
               {/* Activity List */}
-              <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+              <div className="space-y-2 max-h-[400px] sm:max-h-[600px] overflow-y-auto pr-1 sm:pr-2">
                 {filteredActivities.length > 0 ? (
                   filteredActivities.map((activity, index) => (
-                    <div key={index} className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="flex items-start justify-between mb-2">
+                    <div key={index} className="p-3 sm:p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2">
-                          <span className={`font-semibold text-sm ${
+                          <span className={`font-semibold text-xs sm:text-sm ${
                             activity.type === 'purchase' ? 'text-green-500' : 
                             activity.type === 'listed' ? 'text-white-500' : 
                             'text-red-500'
@@ -728,15 +728,15 @@ export default function AdminPage() {
                         <span className="text-xs text-muted-foreground">{activity.timestamp}</span>
                       </div>
                       
-                      <p className="font-medium mb-2">{activity.nftName}</p>
+                      <p className="font-medium text-sm sm:text-base mb-2 break-words">{activity.nftName}</p>
                       
-                      <p className="text-xs text-muted-foreground mb-2">
+                      <p className="text-xs text-muted-foreground mb-2 break-all">
                         NFT ID: 
                         <a 
                           href={`https://suiscan.xyz/testnet/object/${activity.nftId}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:text-primary underline ml-1 font-mono"
+                          className="hover:text-primary underline ml-1 font-mono break-all"
                         >
                           {activity.nftId.slice(0, 8)}...{activity.nftId.slice(-6)}
                         </a>

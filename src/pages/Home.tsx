@@ -185,40 +185,40 @@ export default function Home() {
     <main className="min-h-screen bg-background">
       <Header />
 
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">
         {/* Hero Section */}
-        <section className="mb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <section className="mb-12 sm:mb-16 lg:mb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div>
-              <h1 className="text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent text-balance">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent text-balance">
                 The Future of Digital Collectibles
               </h1>
-              <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
                 Mint, trade, and collect unique NFTs on the Sui blockchain. Experience lightning-fast transactions and
                 low fees with our modern marketplace.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/explore">
-                  <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-lg px-8 py-6">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Link to="/explore" className="w-full sm:w-auto">
+                  <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6">
                     Explore NFTs
-                    <ArrowRight className="ml-2 w-5 h-5" />
+                    <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                 </Link>
                 {account ? (
-                  <Link to="/mint">
-                    <Button variant="outline" className="w-full sm:w-auto text-lg px-8 py-6 bg-transparent">
+                  <Link to="/mint" className="w-full sm:w-auto">
+                    <Button variant="outline" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 bg-transparent">
                       Create NFT
                     </Button>
                   </Link>
                 ) : (
-                  <p className="text-sm text-muted-foreground pt-2">Connect wallet to create NFTs</p>
+                  <p className="text-sm text-muted-foreground pt-2 text-center sm:text-left">Connect wallet to create NFTs</p>
                 )}
               </div>
             </div>
 
             {/* Hero Visual - NFT Slideshow */}
-            <div className="hidden lg:flex items-center justify-center">
-              <div className="relative w-full h-96">
+            <div className="flex items-center justify-center mt-8 lg:mt-0">
+              <div className="relative w-full h-64 sm:h-80 lg:h-96">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl blur-3xl" />
                 <div className="relative h-full w-full rounded-3xl bg-card border border-border/50 overflow-hidden glow-purple">
                   {loading ? (
@@ -246,12 +246,12 @@ export default function Home() {
                             }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                            <h3 className="text-2xl font-bold mb-2">{listing.name}</h3>
-                            <p className="text-sm text-gray-300 mb-3 line-clamp-2">{listing.description}</p>
+                          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white">
+                            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2">{listing.name}</h3>
+                            <p className="text-xs sm:text-sm text-gray-300 mb-2 sm:mb-3 line-clamp-2">{listing.description}</p>
                             <div className="flex items-center justify-end">
                               <Link to="/explore">
-                                <Button size="sm" className="bg-primary hover:bg-primary/90">
+                                <Button size="sm" className="bg-primary hover:bg-primary/90 text-xs sm:text-sm">
                                   View Details
                                 </Button>
                               </Link>
@@ -263,21 +263,21 @@ export default function Home() {
                       {/* Navigation Buttons */}
                       <button
                         onClick={() => setCurrentSlide((prev) => (prev - 1 + listings.length) % listings.length)}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-3 rounded-full transition-all backdrop-blur-sm"
                         aria-label="Previous slide"
                       >
-                        <ChevronLeft className="w-6 h-6" />
+                        <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
                       </button>
                       <button
                         onClick={() => setCurrentSlide((prev) => (prev + 1) % listings.length)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm"
+                        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-3 rounded-full transition-all backdrop-blur-sm"
                         aria-label="Next slide"
                       >
-                        <ChevronRight className="w-6 h-6" />
+                        <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
                       </button>
                       
                       {/* Slide Indicators */}
-                      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                      <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                         {listings.map((_, index) => (
                           <button
                             key={index}
@@ -332,9 +332,9 @@ export default function Home() {
         */}
         
         {/* Features Section */}
-        <section className="mb-20">
-          <h2 className="text-3xl font-bold mb-12 text-center">Why OpenSUI?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <section className="mb-12 sm:mb-16 lg:mb-20">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-center">Why OpenSUI?</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
             {[
               {
                 icon: "⚡",
@@ -366,9 +366,9 @@ export default function Home() {
 
         {/* CTA Section */}
         {!account && (
-          <section className="rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-border p-12 text-center">
-            <h3 className="text-2xl font-bold mb-4">Ready to get started?</h3>
-            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <section className="rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-border p-6 sm:p-8 lg:p-12 text-center">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Ready to get started?</h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
               Connect your Sui wallet to explore NFTs, create your own, and manage your collection.
             </p>
           </section>

@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useToast } from "@/components/ui/toast-provider"
-import { SlidersHorizontal, Grid3x3, List } from "lucide-react"
+import { SlidersHorizontal, Grid3x3, List, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { useCurrentAccount, useSuiClient, useSignAndExecuteTransaction } from "@mysten/dapp-kit"
 import { CONTRACTMARKETPLACEID, CONTRACTPACKAGEID, CONTRACTMODULENAME, CONTRACTBUYMETHOD, CONTRACTDELISTMETHOD } from "../configs/constants"
@@ -30,7 +30,7 @@ export default function ExplorePage() {
   const [error, setError] = useState<string | null>(null)
   const [listings, setListings] = useState<ListingItem[]>([])
   const [selectedListing, setSelectedListing] = useState<ListingItem | null>(null)
- const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [sortBy, setSortBy] = useState<'price-low' | 'price-high' | 'name'>('price-low')
   const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [showFilters, setShowFilters] = useState(false)
@@ -46,6 +46,35 @@ export default function ExplorePage() {
       fetchUserBalance()
     }
   }, [account?.address])
+
+  // Prevent body scroll when mobile modal is open
+  useEffect(() => {
+    const checkAndSetScroll = () => {
+      const isMobile = window.matchMedia('(max-width: 1023px)').matches
+      if (selectedListing && isMobile) {
+        // Mobile modal is open - prevent body scroll
+        document.body.style.overflow = 'hidden'
+      } else {
+        // Allow body scroll (desktop or no modal)
+        document.body.style.overflow = ''
+      }
+    }
+    
+    checkAndSetScroll()
+    
+    // Listen for window resize to handle orientation changes
+    const mediaQuery = window.matchMedia('(max-width: 1023px)')
+    const handleResize = () => checkAndSetScroll()
+    mediaQuery.addEventListener('change', handleResize)
+    window.addEventListener('resize', handleResize)
+    
+    return () => {
+      // Cleanup: always restore scroll on unmount
+      document.body.style.overflow = ''
+      mediaQuery.removeEventListener('change', handleResize)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [selectedListing])
 
   const fetchUserBalance = async () => {
     if (!account?.address) return
@@ -491,8 +520,16 @@ export default function ExplorePage() {
 
       console.log(`\n=== ✅ LOADED ${items.length} LISTINGS ===`)
       setListings(items)
+      // Don't auto-select listings on mobile - let user explicitly choose
+      // Only auto-select on desktop (lg and above) to show sidebar
       if (items.length > 0 && !selectedListing) {
-        setSelectedListing(items[0])
+        // Check if we're on desktop using media query (more reliable than window.innerWidth)
+        const mediaQuery = window.matchMedia('(min-width: 1024px)')
+        if (mediaQuery.matches) {
+          // Desktop: auto-select first listing to show in sidebar
+          setSelectedListing(items[0])
+        }
+        // Mobile: don't auto-select - user must click to open modal
       }
     } catch (e: any) {
       setError(e?.message || 'Failed to load listings.')
@@ -533,20 +570,20 @@ export default function ExplorePage() {
   }, [search, listings, sortBy, priceRange])
 
   return (
-    <main className="min-h-screen bg-background">
-      <Header />
-      
-      {/* Header bar */}
-      
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">OpenSUI Marketplace</h1>
-            <div className="flex items-center gap-4">
+    <>
+      <main className="min-h-screen bg-background">
+        <Header />
+        
+        {/* Header bar */}
+        <div className="container mx-auto px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">OpenSUI Marketplace</h1>
+            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                className="text-primary"
+                className="text-primary flex-1 sm:flex-initial"
               >
                 {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid3x3 className="w-4 h-4" />}
               </Button>
@@ -555,345 +592,565 @@ export default function ExplorePage() {
                 size="sm"
                 onClick={loadListings} 
                 disabled={loading}
-                className="text-primary"
+                className="text-primary flex-1 sm:flex-initial"
               >
                 {loading ? 'Loading...' : 'Refresh'}
               </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-6">
-          {/* Left Sidebar - Filters */}
-          <div className={`${showFilters ? 'w-64' : 'w-0'} transition-all duration-300 overflow-hidden flex-shrink-0`}>
-            <Card className="bg-card border-border p-4 sticky top-4">
-              <div className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-primary uppercase">Filters</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowFilters(false)}
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                    >
-                      ×
-                    </Button>
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          <div className="flex gap-4 sm:gap-6">
+            {/* Desktop Sidebar - Filters */}
+            <div className={`hidden sm:block ${showFilters ? 'sm:w-64' : 'sm:w-0'} transition-all duration-300 overflow-hidden flex-shrink-0`}>
+              {showFilters && (
+                <Card className="bg-card border-border p-4 sticky top-4">
+                  <div className="space-y-6">
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold text-primary uppercase">Filters</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowFilters(false)}
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                        >
+                          ×
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase mb-2 block">Search</label>
+                          <div className="relative">
+                            <Input
+                              placeholder="Item name..."
+                              value={search}
+                              onChange={(e) => setSearch(e.target.value)}
+                              className="bg-background border-border text-sm h-8"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase mb-2 block">Sort By</label>
+                          <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                            className="w-full bg-background border border-border text-foreground text-sm h-8 rounded px-2"
+                          >
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="name">Name</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase mb-2 block">Price Range (SUI)</label>
+                          <div className="space-y-2">
+                            <Input
+                              type="number"
+                              placeholder="Min"
+                              value={priceRange.min}
+                              onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                              className="bg-background border-border text-sm h-8"
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Max"
+                              value={priceRange.max}
+                              onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                              className="bg-background border-border text-sm h-8"
+                            />
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSearch('')
+                            setPriceRange({ min: '', max: '' })
+                          }}
+                          className="w-full text-xs h-7"
+                        >
+                          Clear Filters
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-border">
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <div className="flex justify-between">
+                          <span>Total Items:</span>
+                          <span className="text-foreground">{listings.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Showing:</span>
+                          <span className="text-foreground">{filtered.length}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-xs text-muted-foreground uppercase mb-2 block">Search</label>
-                      <div className="relative">
-                        <Input
-                          placeholder="Item name..."
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                          className="bg-background border-border text-sm h-8"
-                        />
-                      </div>
-                    </div>
+                </Card>
+              )}
+            </div>
 
-                    <div>
-                      <label className="text-xs text-muted-foreground uppercase mb-2 block">Sort By</label>
-                      <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as any)}
-                        className="w-full bg-background border border-border text-foreground text-sm h-8 rounded px-2"
-                      >
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
-                        <option value="name">Name</option>
-                      </select>
-                    </div>
+            {/* Main Content Area */}
+            <div className="flex-1 min-w-0 w-full">
+              {!showFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFilters(true)}
+                  className="mb-4 w-full sm:w-auto"
+                >
+                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  Show Filters
+                </Button>
+              )}
 
-                    <div>
-                      <label className="text-xs text-muted-foreground uppercase mb-2 block">Price Range (SUI)</label>
-                      <div className="space-y-2">
-                        <Input
-                          type="number"
-                          placeholder="Min"
-                          value={priceRange.min}
-                          onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-                          className="bg-background border-border text-sm h-8"
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Max"
-                          value={priceRange.max}
-                          onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-                          className="bg-background border-border text-sm h-8"
-                        />
-                      </div>
-                    </div>
+              {error && (
+                <div className="mb-4 p-3 bg-destructive/20 border border-destructive/50 rounded text-sm text-destructive">
+                  {error}
+                </div>
+              )}
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSearch('')
-                        setPriceRange({ min: '', max: '' })
-                      }}
-                      className="w-full text-xs h-7"
-                    >
-                      Clear Filters
-                    </Button>
+              {loading ? (
+                <div className="flex items-center justify-center min-h-[60vh]">
+                  <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading marketplace...</p>
                   </div>
                 </div>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-20">
+                  <p className="text-muted-foreground text-lg">No items found</p>
+                  <p className="text-muted-foreground text-sm mt-2">Try adjusting your filters</p>
+                </div>
+              ) : (
+                <div className="flex flex-col lg:flex-row gap-4">
+                  {/* Items List */}
+                  <div className={`flex-1 ${selectedListing ? 'lg:w-[calc(100%-18rem)]' : 'w-full'}`}>
+                    {viewMode === 'grid' ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                        {filtered.map((item) => {
+                          const isSelected = selectedListing?.id === item.id
+                          
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => setSelectedListing(item)}
+                              className={`bg-card border-2 rounded cursor-pointer transition-all hover:border-primary ${
+                                isSelected ? 'border-primary' : 'border-border'
+                              }`}
+                            >
+                              <div className="aspect-square bg-muted overflow-hidden">
+                                <img 
+                                  src={item.image} 
+                                  alt={item.name} 
+                                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/placeholder.svg'
+                                  }}
+                                />
+                              </div>
+                              <div className="p-3">
+                                <h3 className="text-foreground text-sm font-semibold truncate mb-1">{item.name}</h3>
+                                <h3 className="text-muted-foreground text-xs font-semibold truncate mb-1">{item.description}</h3>
+                                {item.price && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-primary text-lg font-bold">{item.price} SUI</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {filtered.map((item) => {
+                          const isSelected = selectedListing?.id === item.id
+                          
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => setSelectedListing(item)}
+                              className={`bg-card border-2 rounded cursor-pointer transition-all hover:border-primary ${
+                                isSelected ? 'border-primary' : 'border-border'
+                              }`}
+                            >
+                              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3">
+                                <div className="w-full sm:w-24 h-48 sm:h-24 flex-shrink-0 bg-muted rounded overflow-hidden">
+                                  <img 
+                                    src={item.image} 
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.src = '/placeholder.svg'
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-foreground font-semibold mb-1 text-sm sm:text-base">{item.name}</h3>
+                                  <p className="text-muted-foreground text-xs sm:text-sm mb-2 line-clamp-2 sm:truncate">{item.description}</p>
+                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                    {item.seller && (
+                                      <p className="text-xs text-muted-foreground">
+                                        Seller: <a 
+                                          href={`https://suiscan.xyz/testnet/account/${item.seller}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="hover:text-primary underline"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {item.seller.slice(0, 6)}...{item.seller.slice(-4)}
+                                        </a>
+                                      </p>
+                                    )}
+                                    {item.price && (
+                                      <span className="text-primary text-lg sm:text-xl font-bold">{item.price} SUI</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
 
-                <div className="pt-4 border-t border-border">
+                  {/* Right Panel - Selected Item Details (Desktop only) */}
+                  {selectedListing && (
+                    <div className="hidden lg:block w-64 flex-shrink-0">
+                      <Card className="bg-card border-border sticky top-20">
+                        <div className="p-4">
+                          <div className="aspect-square bg-muted rounded mb-4 overflow-hidden">
+                            <img 
+                              src={selectedListing.image} 
+                              alt={selectedListing.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/placeholder.svg'
+                              }}
+                            />
+                          </div>
+
+                          <h2 className="text-foreground text-xl font-bold mb-2">{selectedListing.name}</h2>
+                          
+                          {selectedListing.description && (
+                            <p className="text-muted-foreground text-sm mb-4">{selectedListing.description}</p>
+                          )}
+
+                          <div className="bg-muted rounded p-3 mb-4">
+                            <div className="flex items-baseline justify-between mb-2">
+                              <span className="text-muted-foreground text-xs uppercase">Price</span>
+                            </div>
+                            {selectedListing.price ? (
+                              <>
+                                <div className="text-primary text-3xl font-bold">{selectedListing.price} SUI</div>
+                                {showInsufficientBalanceWarning && account?.address && selectedListing.seller && account.address !== selectedListing.seller && (
+                                  <div className="mt-3 text-red-600 dark:text-red-400 text-sm font-medium animate-in fade-in">
+                                    Insufficient balance. You need {(Number(selectedListing.price) - Number(userBalance)).toFixed(4)} more SUI
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <div className="text-muted-foreground text-sm">Not listed</div>
+                            )}
+                          </div>
+
+                          {selectedListing.seller && (
+                            <div className="mb-4 p-3 bg-muted rounded">
+                              <p className="text-xs text-muted-foreground uppercase mb-1">Seller</p>
+                              <a 
+                                href={`https://suiscan.xyz/testnet/account/${selectedListing.seller}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-foreground text-sm font-mono hover:text-primary underline break-all"
+                              >
+                                {selectedListing.seller.slice(0, 8)}...{selectedListing.seller.slice(-6)}
+                              </a>
+                            </div>
+                          )}
+
+                          <div className="space-y-2">
+                            {account?.address && selectedListing.seller && account.address === selectedListing.seller ? (
+                              <Button
+                                onClick={() => delistNFT(selectedListing.id)}
+                                disabled={isPending}
+                                variant="outline"
+                                className="w-full text-destructive hover:bg-destructive/20 hover:border-destructive"
+                              >
+                                {isPending ? "Processing..." : "Delist Item"}
+                              </Button>
+                            ) : selectedListing.price ? (
+                              <Button
+                                onClick={() => buyNFT(selectedListing.id, selectedListing.price!)}
+                                disabled={isPending}
+                                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg h-12"
+                              >
+                                {isPending ? "Processing..." : "Buy Now"}
+                              </Button>
+                            ) : null}
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t border-border">
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <div className="flex justify-between">
+                                <span>Listing ID:</span>
+                                <a 
+                                  href={`https://suiscan.xyz/testnet/object/${selectedListing.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-mono hover:text-primary underline"
+                                >
+                                  {selectedListing.id.slice(0, 8)}...
+                                </a>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>NFT ID:</span>
+                                <a 
+                                  href={`https://suiscan.xyz/testnet/object/${selectedListing.nftId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-mono hover:text-primary underline"
+                                >
+                                  {selectedListing.nftId.slice(0, 8)}...
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Mobile filter drawer */}
+      {showFilters && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 sm:hidden"
+            onClick={() => setShowFilters(false)}
+          />
+          <div className="fixed left-0 top-0 h-full w-3/4 max-w-sm bg-card border-r border-border z-50 sm:hidden overflow-y-auto p-4 shadow-xl">
+            <div className="space-y-6">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-primary uppercase">Filters</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFilters(false)}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                  >
+                    ×
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs text-muted-foreground uppercase mb-2 block">Search</label>
+                    <div className="relative">
+                      <Input
+                        placeholder="Item name..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="bg-background border-border text-sm h-8"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-muted-foreground uppercase mb-2 block">Sort By</label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as any)}
+                      className="w-full bg-background border border-border text-foreground text-sm h-8 rounded px-2"
+                    >
+                      <option value="price-low">Price: Low to High</option>
+                      <option value="price-high">Price: High to Low</option>
+                      <option value="name">Name</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-muted-foreground uppercase mb-2 block">Price Range (SUI)</label>
+                    <div className="space-y-2">
+                      <Input
+                        type="number"
+                        placeholder="Min"
+                        value={priceRange.min}
+                        onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                        className="bg-background border-border text-sm h-8"
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Max"
+                        value={priceRange.max}
+                        onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                        className="bg-background border-border text-sm h-8"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearch('')
+                      setPriceRange({ min: '', max: '' })
+                    }}
+                    className="w-full text-xs h-7"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div className="flex justify-between">
+                    <span>Total Items:</span>
+                    <span className="text-foreground">{listings.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Showing:</span>
+                    <span className="text-foreground">{filtered.length}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      
+      {/* Mobile Selected Item Modal */}
+      {selectedListing && (
+        <div className="lg:hidden fixed inset-0 z-[60] bg-background overflow-y-auto">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">NFT Details</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedListing(null)}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <Card className="bg-card border-border">
+              <div className="p-4">
+                <div className="aspect-square bg-muted rounded mb-4 overflow-hidden">
+                  <img 
+                    src={selectedListing.image} 
+                    alt={selectedListing.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg'
+                    }}
+                  />
+                </div>
+
+                <h2 className="text-foreground text-xl font-bold mb-2">{selectedListing.name}</h2>
+                
+                {selectedListing.description && (
+                  <p className="text-muted-foreground text-sm mb-4">{selectedListing.description}</p>
+                )}
+
+                <div className="bg-muted rounded p-3 mb-4">
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className="text-muted-foreground text-xs uppercase">Price</span>
+                  </div>
+                  {selectedListing.price ? (
+                    <>
+                      <div className="text-primary text-3xl font-bold">{selectedListing.price} SUI</div>
+                      {showInsufficientBalanceWarning && account?.address && selectedListing.seller && account.address !== selectedListing.seller && (
+                        <div className="mt-3 text-red-600 dark:text-red-400 text-sm font-medium animate-in fade-in">
+                          Insufficient balance. You need {(Number(selectedListing.price) - Number(userBalance)).toFixed(4)} more SUI
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-muted-foreground text-sm">Not listed</div>
+                  )}
+                </div>
+
+                {selectedListing.seller && (
+                  <div className="mb-4 p-3 bg-muted rounded">
+                    <p className="text-xs text-muted-foreground uppercase mb-1">Seller</p>
+                    <a 
+                      href={`https://suiscan.xyz/testnet/account/${selectedListing.seller}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground text-sm font-mono hover:text-primary underline break-all"
+                    >
+                      {selectedListing.seller.slice(0, 8)}...{selectedListing.seller.slice(-6)}
+                    </a>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {account?.address && selectedListing.seller && account.address === selectedListing.seller ? (
+                    <Button
+                      onClick={() => delistNFT(selectedListing.id)}
+                      disabled={isPending}
+                      variant="outline"
+                      className="w-full text-destructive hover:bg-destructive/20 hover:border-destructive"
+                    >
+                      {isPending ? "Processing..." : "Delist Item"}
+                    </Button>
+                  ) : selectedListing.price ? (
+                    <Button
+                      onClick={() => buyNFT(selectedListing.id, selectedListing.price!)}
+                      disabled={isPending}
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg h-12"
+                    >
+                      {isPending ? "Processing..." : "Buy Now"}
+                    </Button>
+                  ) : null}
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-border">
                   <div className="text-xs text-muted-foreground space-y-1">
                     <div className="flex justify-between">
-                      <span>Total Items:</span>
-                      <span className="text-foreground">{listings.length}</span>
+                      <span>Listing ID:</span>
+                      <a 
+                        href={`https://suiscan.xyz/testnet/object/${selectedListing.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono hover:text-primary underline"
+                      >
+                        {selectedListing.id.slice(0, 8)}...
+                      </a>
                     </div>
                     <div className="flex justify-between">
-                      <span>Showing:</span>
-                      <span className="text-foreground">{filtered.length}</span>
+                      <span>NFT ID:</span>
+                      <a 
+                        href={`https://suiscan.xyz/testnet/object/${selectedListing.nftId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono hover:text-primary underline"
+                      >
+                        {selectedListing.nftId.slice(0, 8)}...
+                      </a>
                     </div>
                   </div>
                 </div>
               </div>
             </Card>
           </div>
-
-          {/* Main Content Area */}
-          <div className="flex-1 min-w-0">
-            {!showFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowFilters(true)}
-                className="mb-4"
-              >
-                <SlidersHorizontal className="w-4 h-4 mr-2" />
-                Show Filters
-              </Button>
-            )}
-
-            {error && (
-              <div className="mb-4 p-3 bg-destructive/20 border border-destructive/50 rounded text-sm text-destructive">
-                {error}
-              </div>
-            )}
-
-            {loading ? (
-              <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center">
-                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading marketplace...</p>
-                </div>
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-muted-foreground text-lg">No items found</p>
-                <p className="text-muted-foreground text-sm mt-2">Try adjusting your filters</p>
-              </div>
-            ) : (
-              <div className="flex gap-4">
-                {/* Items List */}
-                <div className="flex-1">
-                  {viewMode === 'grid' ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {filtered.map((item) => {
-                        const isSelected = selectedListing?.id === item.id
-                        
-                        return (
-                          <div
-                            key={item.id}
-                            onClick={() => setSelectedListing(item)}
-                            className={`bg-card border-2 rounded cursor-pointer transition-all hover:border-primary ${
-                              isSelected ? 'border-primary' : 'border-border'
-                            }`}
-                          >
-                            <div className="aspect-square bg-muted overflow-hidden">
-                              <img 
-                                src={item.image} 
-                                alt={item.name} 
-                                className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                                onError={(e) => {
-                                  e.currentTarget.src = '/placeholder.svg'
-                                }}
-                              />
-                            </div>
-                            <div className="p-3">
-                              <h3 className="text-foreground text-sm font-semibold truncate mb-1">{item.name}</h3>
-                              <h3 className="text-muted-foreground text-xs font-semibold truncate mb-1">{item.description}</h3>
-                              {item.price && (
-                                <div className="flex items-center justify-between">
-                                  <span className="text-primary text-lg font-bold">{item.price} SUI</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {filtered.map((item) => {
-                        const isSelected = selectedListing?.id === item.id
-                        
-                        return (
-                          <div
-                            key={item.id}
-                            onClick={() => setSelectedListing(item)}
-                            className={`bg-card border-2 rounded cursor-pointer transition-all hover:border-primary ${
-                              isSelected ? 'border-primary' : 'border-border'
-                            }`}
-                          >
-                            <div className="flex gap-4 p-3">
-                              <div className="w-24 h-24 flex-shrink-0 bg-muted rounded overflow-hidden">
-                                <img 
-                                  src={item.image} 
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.src = '/placeholder.svg'
-                                  }}
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-foreground font-semibold mb-1">{item.name}</h3>
-                                <p className="text-muted-foreground text-sm truncate mb-2">{item.description}</p>
-                                {item.seller && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Seller: <a 
-                                      href={`https://suiscan.xyz/testnet/account/${item.seller}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="hover:text-primary underline"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      {item.seller.slice(0, 6)}...{item.seller.slice(-4)}
-                                    </a>
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex flex-col justify-center items-end">
-                                {item.price && (
-                                  <span className="text-primary text-xl font-bold">{item.price} SUI</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Panel - Selected Item Details */}
-                {selectedListing && (
-                  <div className="w-64 flex-shrink-0">
-                    <Card className="bg-card border-border sticky top-20">
-                      <div className="p-4">
-                        <div className="aspect-square bg-muted rounded mb-4 overflow-hidden">
-                          <img 
-                            src={selectedListing.image} 
-                            alt={selectedListing.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = '/placeholder.svg'
-                            }}
-                          />
-                        </div>
-
-                        <h2 className="text-foreground text-xl font-bold mb-2">{selectedListing.name}</h2>
-                        
-                        {selectedListing.description && (
-                          <p className="text-muted-foreground text-sm mb-4">{selectedListing.description}</p>
-                        )}
-
-                        <div className="bg-muted rounded p-3 mb-4">
-                          <div className="flex items-baseline justify-between mb-2">
-                            <span className="text-muted-foreground text-xs uppercase">Price</span>
-                          </div>
-                          {selectedListing.price ? (
-                            <>
-                              <div className="text-primary text-3xl font-bold">{selectedListing.price} SUI</div>
-                              {showInsufficientBalanceWarning && account?.address && selectedListing.seller && account.address !== selectedListing.seller && (
-                                <div className="mt-3 text-red-600 dark:text-red-400 text-sm font-medium animate-in fade-in">
-                                  Insufficient balance. You need {(Number(selectedListing.price) - Number(userBalance)).toFixed(4)} more SUI
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="text-muted-foreground text-sm">Not listed</div>
-                          )}
-                        </div>
-
-                        {selectedListing.seller && (
-                          <div className="mb-4 p-3 bg-muted rounded">
-                            <p className="text-xs text-muted-foreground uppercase mb-1">Seller</p>
-                            <a 
-                              href={`https://suiscan.xyz/testnet/account/${selectedListing.seller}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-foreground text-sm font-mono hover:text-primary underline break-all"
-                            >
-                              {selectedListing.seller.slice(0, 8)}...{selectedListing.seller.slice(-6)}
-                            </a>
-                          </div>
-                        )}
-
-                        <div className="space-y-2">
-                          {account?.address && selectedListing.seller && account.address === selectedListing.seller ? (
-                            <Button
-                              onClick={() => delistNFT(selectedListing.id)}
-                              disabled={isPending}
-                              variant="outline"
-                              className="w-full text-destructive hover:bg-destructive/20 hover:border-destructive"
-                            >
-                              {isPending ? "Processing..." : "Delist Item"}
-                            </Button>
-                          ) : selectedListing.price ? (
-                            <Button
-                              onClick={() => buyNFT(selectedListing.id, selectedListing.price!)}
-                              disabled={isPending}
-                              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg h-12"
-                            >
-                              {isPending ? "Processing..." : "Buy Now"}
-                            </Button>
-                          ) : null}
-                        </div>
-
-                        <div className="mt-4 pt-4 border-t border-border">
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <div className="flex justify-between">
-                              <span>Listing ID:</span>
-                              <a 
-                                href={`https://suiscan.xyz/testnet/object/${selectedListing.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-mono hover:text-primary underline"
-                              >
-                                {selectedListing.id.slice(0, 8)}...
-                              </a>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>NFT ID:</span>
-                              <a 
-                                href={`https://suiscan.xyz/testnet/object/${selectedListing.nftId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-mono hover:text-primary underline"
-                              >
-                                {selectedListing.nftId.slice(0, 8)}...
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
         </div>
-      </div>
-    </main>
+      )}
+    </>
   )
 }
