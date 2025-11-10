@@ -14,7 +14,6 @@ export default function MintPage() {
   const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
   const [loading, setLoading] = useState(false)
-  const [listForSale, setListForSale] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     description: "",

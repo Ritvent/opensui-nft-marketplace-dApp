@@ -23,7 +23,7 @@ interface NFTCardProps {
 }
 
 export function NFTCard({
-  id,
+  id: _id,
   name,
   description,
   image,
