@@ -24,7 +24,7 @@ export default function MintPage() {
 
   if (!account) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen">
         <Header />
         <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
@@ -102,23 +102,23 @@ export default function MintPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen">
       <Header />
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-6 sm:py-8 lg:py-12">
         <div className="max-w-3xl mx-auto">
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <div className="mb-8 sm:mb-12">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Create & Mint NFT
             </h1>
-            <p className="text-muted-foreground">Mint your unique digital collectible on Sui</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Mint your unique digital collectible on Sui</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             {/* NFT Details Section */}
-            <div className="rounded-lg bg-card border border-border p-6 space-y-6">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Zap className="w-5 h-5 text-primary" />
+            <div className="rounded-lg bg-card border border-border p-4 sm:p-6 space-y-4 sm:space-y-6">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 NFT Details
               </h2>
 
@@ -189,16 +189,16 @@ export default function MintPage() {
                 !formData.description ||
                 !formData.imageUrl
               }
-              className="w-full bg-primary hover:bg-primary/90 py-6 text-lg font-semibold"
+              className="w-full bg-primary hover:bg-primary/90 py-5 sm:py-6 text-base sm:text-lg font-semibold"
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+                  <Loader2 className="mr-2 w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   Creating NFT...
                 </>
               ) : (
                 <>
-                  <Zap className="mr-2 w-5 h-5" />
+                  <Zap className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                   Mint NFT
                 </>
               )}
