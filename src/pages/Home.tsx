@@ -182,7 +182,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen">
       <Header />
 
       <div className="container mx-auto px-4 py-8 sm:py-12 lg:py-16">

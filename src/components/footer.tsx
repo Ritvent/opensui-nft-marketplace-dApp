@@ -11,9 +11,6 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-3 sm:mb-4">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <span className="text-lg font-bold text-primary-foreground">◆</span>
-              </div>
               <span className="text-base sm:text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 OpenSUI
               </span>
@@ -42,29 +39,6 @@ export function Footer() {
               </li>
             </ul>
           </div>
-
-          {/* Resources */}
-          <div>
-            <h3 className="text-sm sm:text-base font-semibold text-foreground mb-3 sm:mb-4">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  FAQ
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Support
-                </a>
-              </li>
-            </ul>
-          </div>
-
           {/* Social */}
           <div>
             <h3 className="text-sm sm:text-base font-semibold text-foreground mb-3 sm:mb-4">Connect</h3>
@@ -76,7 +50,7 @@ export function Footer() {
                 <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground hover:text-primary" />
               </a>
             </div>
-          </div>
+          </div>  
         </div>
 
         {/* Bottom */}

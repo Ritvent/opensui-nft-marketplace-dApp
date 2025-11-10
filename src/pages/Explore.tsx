@@ -571,7 +571,7 @@ export default function ExplorePage() {
 
   return (
     <>
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen">
         <Header />
         
         {/* Header bar */}
@@ -1045,7 +1045,7 @@ export default function ExplorePage() {
           
           {/* Slide-in Panel from Right */}
           <div 
-            className="lg:hidden fixed inset-y-0 right-0 z-[70] w-full sm:w-[85%] max-w-sm bg-background shadow-2xl overflow-y-auto"
+            className="lg:hidden fixed inset-y-0 right-0 z-[70] w-[90%] sm:w-[85%] max-w-sm bg-background shadow-2xl overflow-y-auto"
             style={{
               animation: 'slideInRight 0.3s ease-out'
             }}

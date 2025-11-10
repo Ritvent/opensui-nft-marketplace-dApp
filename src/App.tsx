@@ -6,12 +6,14 @@ import { getQueryClient } from './lib/query-client';
 import { Footer } from './components/footer';
 import { ToastProvider } from './components/ui/toast-provider';
 import { Toaster } from './components/ui/toaster';
+import ParallaxWaves from './components/ParallaxWaves';
 import Home from './pages/Home';
 import Mint from './pages/Mint';
 import Explore from './pages/Explore';
 import MyNFTs from './pages/MyNFTs';
 import Admin from './pages/Admin';
 import './App.css';
+
 
 // Config options for the networks you want to connect to
 const { networkConfig } = createNetworkConfig({
@@ -30,6 +32,7 @@ function App() {
           <ToastProvider>
             <BrowserRouter>
               <div className="flex flex-col min-h-screen relative">
+                <ParallaxWaves />
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/mint" element={<Mint />} />

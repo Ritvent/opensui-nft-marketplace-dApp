@@ -366,7 +366,7 @@ export default function AdminPage() {
 
   if (!account) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen">
         <Header />
         <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
@@ -380,7 +380,7 @@ export default function AdminPage() {
 
   if (!isAdmin) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen">
         <Header />
         <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
@@ -488,7 +488,7 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen">
       <Header />
 
       <div className="container mx-auto px-4 py-6 sm:py-8">
