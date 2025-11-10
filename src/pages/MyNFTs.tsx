@@ -12,7 +12,6 @@ export default function MyNFTsPage() {
   const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
   const [nfts, setNfts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [showListInput, setShowListInput] = useState(false)
   const [priceById, setPriceById] = useState<Record<string, string>>({})
   const [openListForId, setOpenListForId] = useState<string | null>(null)
 

@@ -33,7 +33,6 @@ export default function AdminPage() {
     todaySales: 0,
   })
   const [recentActivities, setRecentActivities] = useState<any[]>([])
-  const [salesTrend, setSalesTrend] = useState(true)
   const isAdmin = account?.address === ADMIN_ADDRESS
 
   // Load marketplace stats in real-time
@@ -160,7 +159,8 @@ export default function AdminPage() {
       // Calculate total fees from purchases
       let totalFees = 0
       purchaseEvents.data.forEach((event: any) => {
-        const price = Number(event.parsedJson?.price || 0)
+        const parsedJson = event.parsedJson as any
+        const price = Number(parsedJson?.price || 0)
         // 2% fee
         totalFees += price * 0.02
       })
@@ -180,8 +180,9 @@ export default function AdminPage() {
       
       // Collect all listing IDs from ListNFTEvent
       listingEvents.data.forEach((event: any) => {
-        if (event.parsedJson?.listing_id) {
-          listingIds.add(event.parsedJson.listing_id)
+        const parsedJson = event.parsedJson as any
+        if (parsedJson?.listing_id) {
+          listingIds.add(parsedJson.listing_id)
         }
       })
 
@@ -209,10 +210,11 @@ export default function AdminPage() {
 
       // Add purchase events
       for (const event of purchaseEvents.data.slice(0, 10)) {
-        const price = (Number(event.parsedJson?.price || 0) / 1e9).toFixed(2)
-        const nftId = event.parsedJson?.nft_id || 'Unknown'
-        const seller = event.parsedJson?.seller || 'Unknown'
-        const buyer = event.parsedJson?.buyer || 'Unknown'
+        const parsedJson = event.parsedJson as any
+        const price = (Number(parsedJson?.price || 0) / 1e9).toFixed(2)
+        const nftId = parsedJson?.nft_id || 'Unknown'
+        const seller = parsedJson?.seller || 'Unknown'
+        const buyer = parsedJson?.buyer || 'Unknown'
         const timestamp = new Date(Number(event.timestampMs)).toLocaleString()
         
         // Fetch NFT name with caching
@@ -232,10 +234,11 @@ export default function AdminPage() {
 
       // Add listing events
       for (const event of listingEvents.data.slice(0, 5)) {
-        const nftId = event.parsedJson?.nft_id || 'Unknown'
-        const listingId = event.parsedJson?.listing_id || null
-        const seller = event.parsedJson?.seller || 'Unknown'
-        const price = (Number(event.parsedJson?.price || 0) / 1e9).toFixed(2)
+        const parsedJson = event.parsedJson as any
+        const nftId = parsedJson?.nft_id || 'Unknown'
+        const listingId = parsedJson?.listing_id || null
+        const seller = parsedJson?.seller || 'Unknown'
+        const price = (Number(parsedJson?.price || 0) / 1e9).toFixed(2)
         const timestamp = new Date(Number(event.timestampMs)).toLocaleString()
 
         // For listings, try to get NFT name from the listing object first
@@ -291,7 +294,8 @@ export default function AdminPage() {
 
       // Add delist events
       for (const event of delistEvents.data.slice(0, 5)) {
-        const nftId = event.parsedJson?.nft_id || 'Unknown'
+        const parsedJson = event.parsedJson as any
+        const nftId = parsedJson?.nft_id || 'Unknown'
         const timestamp = new Date(Number(event.timestampMs)).toLocaleString()
 
         // Fetch NFT name with caching
@@ -314,7 +318,8 @@ export default function AdminPage() {
       let avgPrice = "0"
       if (purchaseEvents.data.length > 0) {
         const totalPrice = purchaseEvents.data.reduce((sum: number, event: any) => {
-          return sum + (Number(event.parsedJson?.price || 0) / 1e9)
+          const parsedJson = event.parsedJson as any
+          return sum + (Number(parsedJson?.price || 0) / 1e9)
         }, 0)
         avgPrice = (totalPrice / purchaseEvents.data.length).toFixed(2)
       }
@@ -328,25 +333,16 @@ export default function AdminPage() {
         return Number(event.timestampMs) >= todayTimestamp
       }).length
 
-      // Calculate sales trend (compare today vs yesterday)
-      const yesterday = new Date(today)
-      yesterday.setDate(yesterday.getDate() - 1)
-      const yesterdayTimestamp = yesterday.getTime()
-      
-      const yesterdaySales = purchaseEvents.data.filter((event: any) => {
-        const eventTime = Number(event.timestampMs)
-        return eventTime >= yesterdayTimestamp && eventTime < todayTimestamp
-      }).length
-      
-      setSalesTrend(todaySales >= yesterdaySales)
-
       setStats({
         totalFees: marketplaceFees,
         feePercent: "2",
         totalListings: activeListingsCount,
         totalSales: purchaseEvents.data.length,
         totalVolume: allNFTs.data.length.toString(),
-        activeUsers: new Set([...listingEvents.data, ...purchaseEvents.data].map((e: any) => e.parsedJson?.seller || e.parsedJson?.buyer)).size,
+        activeUsers: new Set([...listingEvents.data, ...purchaseEvents.data].map((e: any) => {
+          const parsedJson = e.parsedJson as any
+          return parsedJson?.seller || parsedJson?.buyer
+        })).size,
         allTimeListings: listingIds.size,
         avgPrice,
         todaySales,

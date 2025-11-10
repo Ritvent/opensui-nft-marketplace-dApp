@@ -9,7 +9,7 @@ import { useState } from 'react';
 const Minter = () => {
     const suiClient = useSuiClient();
     const account = useCurrentAccount();
-    const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction();
+    const { mutate: signAndExecute } = useSignAndExecuteTransaction();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [url, setUrl] = useState('');
