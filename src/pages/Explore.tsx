@@ -47,15 +47,15 @@ export default function ExplorePage() {
     }
   }, [account?.address])
 
-  // Prevent body scroll when mobile modal is open
+  // Prevent body scroll when mobile slide-in panel is open
   useEffect(() => {
     const checkAndSetScroll = () => {
       const isMobile = window.matchMedia('(max-width: 1023px)').matches
       if (selectedListing && isMobile) {
-        // Mobile modal is open - prevent body scroll
+        // Mobile panel is open - prevent body scroll on background
         document.body.style.overflow = 'hidden'
       } else {
-        // Allow body scroll (desktop or no modal)
+        // Allow body scroll (desktop or no panel)
         document.body.style.overflow = ''
       }
     }
@@ -1034,122 +1034,139 @@ export default function ExplorePage() {
         </>
       )}
       
-      {/* Mobile Selected Item Modal */}
+      {/* Mobile Slide-in Panel with Blurred Backdrop */}
       {selectedListing && (
-        <div className="lg:hidden fixed inset-0 z-[60] bg-background overflow-y-auto">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between mb-4">
+        <>
+          {/* Blurred Backdrop - Click to close */}
+          <div 
+            className="lg:hidden fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setSelectedListing(null)}
+          />
+          
+          {/* Slide-in Panel from Right */}
+          <div 
+            className="lg:hidden fixed inset-y-0 right-0 z-[70] w-full sm:w-[85%] max-w-sm bg-background shadow-2xl overflow-y-auto"
+            style={{
+              animation: 'slideInRight 0.3s ease-out'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-background border-b border-border z-10 p-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">NFT Details</h2>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedListing(null)}
+                className="h-8 w-8 p-0"
               >
                 <X className="w-5 h-5" />
               </Button>
             </div>
-            <Card className="bg-card border-border">
-              <div className="p-4">
-                <div className="aspect-square bg-muted rounded mb-4 overflow-hidden">
-                  <img 
-                    src={selectedListing.image} 
-                    alt={selectedListing.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder.svg'
-                    }}
-                  />
-                </div>
-
-                <h2 className="text-foreground text-xl font-bold mb-2">{selectedListing.name}</h2>
-                
-                {selectedListing.description && (
-                  <p className="text-muted-foreground text-sm mb-4">{selectedListing.description}</p>
-                )}
-
-                <div className="bg-muted rounded p-3 mb-4">
-                  <div className="flex items-baseline justify-between mb-2">
-                    <span className="text-muted-foreground text-xs uppercase">Price</span>
+            
+            <div className="p-4">
+              <Card className="bg-card border-border">
+                <div className="p-4">
+                  <div className="aspect-square bg-muted rounded mb-4 overflow-hidden">
+                    <img 
+                      src={selectedListing.image} 
+                      alt={selectedListing.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.svg'
+                      }}
+                    />
                   </div>
-                  {selectedListing.price ? (
-                    <>
-                      <div className="text-primary text-3xl font-bold">{selectedListing.price} SUI</div>
-                      {showInsufficientBalanceWarning && account?.address && selectedListing.seller && account.address !== selectedListing.seller && (
-                        <div className="mt-3 text-red-600 dark:text-red-400 text-sm font-medium animate-in fade-in">
-                          Insufficient balance. You need {(Number(selectedListing.price) - Number(userBalance)).toFixed(4)} more SUI
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-muted-foreground text-sm">Not listed</div>
+
+                  <h2 className="text-foreground text-xl font-bold mb-2">{selectedListing.name}</h2>
+                  
+                  {selectedListing.description && (
+                    <p className="text-muted-foreground text-sm mb-4">{selectedListing.description}</p>
                   )}
-                </div>
 
-                {selectedListing.seller && (
-                  <div className="mb-4 p-3 bg-muted rounded">
-                    <p className="text-xs text-muted-foreground uppercase mb-1">Seller</p>
-                    <a 
-                      href={`https://suiscan.xyz/testnet/account/${selectedListing.seller}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-foreground text-sm font-mono hover:text-primary underline break-all"
-                    >
-                      {selectedListing.seller.slice(0, 8)}...{selectedListing.seller.slice(-6)}
-                    </a>
+                  <div className="bg-muted rounded p-3 mb-4">
+                    <div className="flex items-baseline justify-between mb-2">
+                      <span className="text-muted-foreground text-xs uppercase">Price</span>
+                    </div>
+                    {selectedListing.price ? (
+                      <>
+                        <div className="text-primary text-3xl font-bold">{selectedListing.price} SUI</div>
+                        {showInsufficientBalanceWarning && account?.address && selectedListing.seller && account.address !== selectedListing.seller && (
+                          <div className="mt-3 text-red-600 dark:text-red-400 text-sm font-medium animate-in fade-in">
+                            Insufficient balance. You need {(Number(selectedListing.price) - Number(userBalance)).toFixed(4)} more SUI
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-muted-foreground text-sm">Not listed</div>
+                    )}
                   </div>
-                )}
 
-                <div className="space-y-2">
-                  {account?.address && selectedListing.seller && account.address === selectedListing.seller ? (
-                    <Button
-                      onClick={() => delistNFT(selectedListing.id)}
-                      disabled={isPending}
-                      variant="outline"
-                      className="w-full text-destructive hover:bg-destructive/20 hover:border-destructive"
-                    >
-                      {isPending ? "Processing..." : "Delist Item"}
-                    </Button>
-                  ) : selectedListing.price ? (
-                    <Button
-                      onClick={() => buyNFT(selectedListing.id, selectedListing.price!)}
-                      disabled={isPending}
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg h-12"
-                    >
-                      {isPending ? "Processing..." : "Buy Now"}
-                    </Button>
-                  ) : null}
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-border">
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <div className="flex justify-between">
-                      <span>Listing ID:</span>
+                  {selectedListing.seller && (
+                    <div className="mb-4 p-3 bg-muted rounded">
+                      <p className="text-xs text-muted-foreground uppercase mb-1">Seller</p>
                       <a 
-                        href={`https://suiscan.xyz/testnet/object/${selectedListing.id}`}
+                        href={`https://suiscan.xyz/testnet/account/${selectedListing.seller}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono hover:text-primary underline"
+                        className="text-foreground text-sm font-mono hover:text-primary underline break-all"
                       >
-                        {selectedListing.id.slice(0, 8)}...
+                        {selectedListing.seller.slice(0, 8)}...{selectedListing.seller.slice(-6)}
                       </a>
                     </div>
-                    <div className="flex justify-between">
-                      <span>NFT ID:</span>
-                      <a 
-                        href={`https://suiscan.xyz/testnet/object/${selectedListing.nftId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono hover:text-primary underline"
+                  )}
+
+                  <div className="space-y-2">
+                    {account?.address && selectedListing.seller && account.address === selectedListing.seller ? (
+                      <Button
+                        onClick={() => delistNFT(selectedListing.id)}
+                        disabled={isPending}
+                        variant="outline"
+                        className="w-full text-destructive hover:bg-destructive/20 hover:border-destructive"
                       >
-                        {selectedListing.nftId.slice(0, 8)}...
-                      </a>
+                        {isPending ? "Processing..." : "Delist Item"}
+                      </Button>
+                    ) : selectedListing.price ? (
+                      <Button
+                        onClick={() => buyNFT(selectedListing.id, selectedListing.price!)}
+                        disabled={isPending}
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg h-12"
+                      >
+                        {isPending ? "Processing..." : "Buy Now"}
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <div className="flex justify-between">
+                        <span>Listing ID:</span>
+                        <a 
+                          href={`https://suiscan.xyz/testnet/object/${selectedListing.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono hover:text-primary underline"
+                        >
+                          {selectedListing.id.slice(0, 8)}...
+                        </a>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>NFT ID:</span>
+                        <a 
+                          href={`https://suiscan.xyz/testnet/object/${selectedListing.nftId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono hover:text-primary underline"
+                        >
+                          {selectedListing.nftId.slice(0, 8)}...
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </>
   )
