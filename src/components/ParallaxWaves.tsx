@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ParallaxWaves() {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       // Normalize mouse position to -1 to 1 range
       const x = (e.clientX / window.innerWidth) * 2 - 1;
       const y = (e.clientY / window.innerHeight) * 2 - 1;
@@ -16,7 +16,7 @@ export default function ParallaxWaves() {
   }, []);
 
   // Calculate transforms for each wave layer
-  const getTransform = (intensity) => {
+  const getTransform = (intensity: number): string => {
     const moveX = mousePos.x * intensity;
     const moveY = mousePos.y * intensity;
     return `translate(${moveX}px, ${moveY}px)`;
