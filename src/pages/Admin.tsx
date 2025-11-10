@@ -533,7 +533,7 @@ export default function AdminPage() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground mb-1">Accumulated Fees</p>
-                <p className="text-3xl font-bold text-accent mb-2">{stats.totalFees}</p>
+                <p className="text-primary text-3xl font-bold mb-2">{stats.totalFees}</p>
                 <p className="text-xs text-muted-foreground">SUI ({stats.feePercent}% fee)</p>
               </div>
             </div>
@@ -560,9 +560,9 @@ export default function AdminPage() {
               <h3 className="text-lg font-bold mb-4">Fee Management</h3>
               
               <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-accent/5 border border-accent/20">
+                <div className="p-4 rounded-lg bg-accent/1 border">
                   <p className="text-xs text-muted-foreground mb-1">Available Balance</p>
-                  <p className="text-2xl font-bold text-accent">{stats.totalFees} SUI</p>
+                  <p className="text-primary text-2xl font-bold">{stats.totalFees} SUI</p>
                 </div>
 
                 {!showWithdrawInput ? (
@@ -641,7 +641,8 @@ export default function AdminPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
                   <span className="text-sm text-muted-foreground">Avg Sale Price</span>
-                  <span className="font-bold">{stats.avgPrice} SUI</span>
+                  <span className="text-primary font-bold">{stats.avgPrice} SUI</span>
+                  
                 </div>
                 <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
                   <span className="text-sm text-muted-foreground">Fee Rate</span>
@@ -649,7 +650,7 @@ export default function AdminPage() {
                 </div>
                 <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
                   <span className="text-sm text-muted-foreground">Today's Sales</span>
-                  <span className="font-bold flex items-center gap-1">
+                  <span className="font-bold text-green-500 flex items-center gap-1"> 
                     {stats.todaySales}
                   </span>
                 </div>

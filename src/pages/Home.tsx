@@ -249,8 +249,7 @@ export default function Home() {
                           <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                             <h3 className="text-2xl font-bold mb-2">{listing.name}</h3>
                             <p className="text-sm text-gray-300 mb-3 line-clamp-2">{listing.description}</p>
-                            <div className="flex items-center justify-between">
-                              <span className="text-lg font-bold text-primary">{listing.price} SUI</span>
+                            <div className="flex items-center justify-end">
                               <Link to="/explore">
                                 <Button size="sm" className="bg-primary hover:bg-primary/90">
                                   View Details
